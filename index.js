@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, '/web-content')))
 let options = {
     key: fs.readFileSync(process.env['SERVER_KEY']),
     cert: fs.readFileSync(process.env['SERVER_CERT']),
-    passphrase: fs.readFileSync(process.env['SERVER_PASS']),
+    passphrase: process.env['SERVER_PASS'],
 }
 
 https.createServer(options,app).listen(9090, ()=>{
