@@ -12,7 +12,7 @@ source env/bin/activate
 
 ## flask image server variables
 export FLASK_APP=imageserver.py
-python -m flask run
+python -m flask run 1>>"${dir}/imageserver.log" 2>&1 & disown
 
 ## start node server
 npm start
