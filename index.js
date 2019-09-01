@@ -10,7 +10,7 @@ app.use('/', (req, res, next)=>{
     if(req.originalUrl.slice(-1) !== '/'){     
         next()
     } else {
-        res.redirect('/revantarctica.html')
+        res.redirect('/index.html')
     }    
 })
 

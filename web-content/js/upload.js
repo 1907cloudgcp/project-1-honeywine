@@ -64,8 +64,17 @@ function deleteTableRow(elmnt) {
     // alert(img_name);
     removefromcarousel(img_name);
 
-    // call DELETE on google DataStore...
     let newObj = { 'name': img_name, };
+    // call DELETE on imageserver...
+    fetch(image_server, {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newObj),
+    });
+    // call DELETE on google DataStore...
     fetch(cloud_function, {
         method: 'DELETE',
         headers: {
