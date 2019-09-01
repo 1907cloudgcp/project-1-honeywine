@@ -16,7 +16,7 @@ app = Flask(__name__)
 cors = CORS(app)
 
 @app.route('/', methods=['GET', 'POST'])
-@cross_origin(origin="localhost", methods=['GET', 'POST'],             \
+@cross_origin(origins="localhost", methods=['GET', 'POST'],             \
     allow_headers='Content-Type')
 def image_server():
     """

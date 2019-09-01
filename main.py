@@ -17,7 +17,7 @@ app = Flask(__name__)
 cors = CORS(app)
 
 @app.route('/', methods=['GET', 'POST', 'DELETE'])
-@cross_origin(origin="*", methods=['GET', 'POST', 'DELETE'],                    \
+@cross_origin(origins="*", methods=['GET', 'POST', 'DELETE'],                    \
             allow_headers='Content-Type')
 def data_broker(request):
     """
