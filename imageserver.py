@@ -4,20 +4,27 @@ from flask import Flask, request, make_response
 from flask_cors import CORS, cross_origin
 from datetime import datetime
 from base64 import decodestring
+# from OpenSSL import SSL
 
 # global variables
 # logging...
 
 # server directory
 webdir = os.path.dirname(os.path.realpath(__file__)) + "/web-content"
+os.chdir(webdir)
+
+# https keys
+# context = SSL.Context(SSL.TLSv1_2_METHOD)
+# context.use_privatekey_file('../ssl_auth/serverkey.pem')
+# context.use_certificate_file('../ssl_auth/servercert.pem')
 
 # flask app
 app = Flask(__name__)
-cors = CORS(app)
+app.config.from_object(__name__)
+cors = CORS(app, resources={r'/*': {'origins': '*'}})
 
-@app.route('/', methods=['GET', 'POST', 'DELETE'])
-@cross_origin(origins="*", methods=['GET', 'POST', 'DELETE'],             \
-    allow_headers='Content-Type')
+@app.route('/imageserve', methods=['GET', 'POST', 'DELETE', 'OPTIONS'])
+@cross_origin()
 def image_server():
     """
     Responds to an HTTP request for local image storage.
@@ -28,7 +35,8 @@ def image_server():
         ## retrieve pic from bucket or
         ## retrieving all data from DataStore...
         # print("passed through here...")
-        pass
+        return "Hello World!"
+        # pass
     ## POST request
     if (request.method == 'POST'): 
         ## saving image to local server
@@ -39,6 +47,7 @@ def image_server():
             and 'filename' in request_json
             and 'blob' in request_json):
             response = urllib.request.urlopen(request_json['blob'])
+            # print("POST blob: " + str(request_json['blob']))
             with open(webdir+"/img/"+request_json['filename'], 'wb') as fh:
                 fh.write(response.file.read())
             return ("OK", 200)
@@ -55,3 +64,9 @@ def image_server():
                 print(err)
         return ("OK", 200)
 ## ~ data_broker fin ~ ##
+
+
+## main function
+if __name__ == '__main__':
+    app.run()
+    # app.run(host='127.0.0.1', debug=True, ssl_context=context)

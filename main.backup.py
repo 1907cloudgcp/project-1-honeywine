@@ -1,13 +1,10 @@
 # imports
 import google.cloud.datastore as gcloudd
-import google.cloud.storage as gclouds
 import google.cloud.logging as logging
-import json, urllib
-from datauri import DataURI
+import json
 from flask import Flask, request, make_response
 from flask_cors import CORS, cross_origin
 from datetime import datetime
-from base64 import decodestring
 
 # global variables
 # logging_client = logging.Client()
@@ -20,27 +17,28 @@ app = Flask(__name__)
 cors = CORS(app)
 
 @app.route('/', methods=['GET', 'POST', 'DELETE'])
-@cross_origin(origins="*", methods=['GET', 'POST', 'DELETE'], allow_headers='Content-Type')
+@cross_origin(origins="*", methods=['GET', 'POST', 'DELETE'],                    \
+            allow_headers='Content-Type')
 def data_broker(request):
     """
     Responds to an HTTP request for depositing form data into DataStore.
     """
-    ## Set CORS headers for the preflight request
-    if request.method == 'OPTIONS':
-        ## Allows GET requests from any origin with the Content-Type
-        ## header and caches preflight response for an 3600s
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Max-Age': '3600',
-        }
-        return ('', 204, headers)
+    # ## Set CORS headers for the preflight request
+    # if request.method == 'OPTIONS':
+    #     ## Allows GET requests from any origin with the Content-Type
+    #     ## header and caches preflight response for an 3600s
+    #     headers = {
+    #         'Access-Control-Allow-Origin': '*',
+    #         'Access-Control-Allow-Methods': 'GET, POST',
+    #         'Access-Control-Allow-Headers': 'Content-Type',
+    #         'Access-Control-Max-Age': '3600',
+    #     }
+    #     return ('', 204, headers)
     
-    ## Set CORS headers for the main request
-    headers = {
-        'Access-Control-Allow-Origin': '*',
-    }
+    # ## Set CORS headers for the main request
+    # headers = {
+    #     'Access-Control-Allow-Origin': '*',
+    # }
 
     ## main request
     ## GET request
@@ -74,36 +72,20 @@ def data_broker(request):
                 'height': request_json['height'],  
                 'timestamp': str(datetime.now()),          
             })
-            print("POST metadata: " + str(entity))
+            print("POST entity: " + str(entity))
             # logger.log_text("POST entity: " + str(entity))
             client.put(entity)
             print("put complete")
             return ("OK", 200)
-        if (request_json
-            and 'filename' in request_json
-            and 'blob' in request_json):
-            print("POST data: " + str(request_json['blob']))
-            client = gclouds .Client(project='revgcp-project1-trial')
-            bucket = client.lookup_bucket('antarcticbucketfish66')
-            blob = bucket.blob("web-content/img/" + request_json['filename'])
-            uri = DataURI(request_json['blob']) 
-            blob.upload_from_string(uri.data)
-            print("image saved to bucket")
-            return ("OK", 200)        
     if (request.method == 'DELETE'):
+        ## deleting data from DataStore...
         request_json = request.get_json(silent=False)
         print("DELETE json:" + str(request_json))
         if (request_json and 'name' in request_json):
-            ## delete metadata from DataStore
             client = gcloudd.Client(project='revgcp-project1-trial',
                                     namespace='proj1_records')
             key = client.key('client_record', request_json['name'])
             client.delete(key)
-            print("metadata delete from DataStore complete")
-            ## delete data from bucket
-            client = gclouds .Client(project='revgcp-project1-trial')
-            bucket = client.lookup_bucket('antarcticbucketfish66')
-            bucket.delete_blob("web-content/img/" + request_json['name'])
-            print("data delete StorageBucket complete")
+            print("delete complete")
             return ("OK", 200)
 ## ~ data_broker fin ~ ##

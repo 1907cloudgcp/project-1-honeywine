@@ -1,5 +1,5 @@
 ## change directory
-dir="`pwd`/`dirname "$0"`"
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd ${dir}
 
 ## node server variables
@@ -8,7 +8,7 @@ export SERVER_KEY="${dir}/ssl_auth/serverkey.pem"
 export SERVER_PASS="password"
 
 ## source python environment
-source env/bin/activate
+source "${dir}/env/bin/activate"
 
 ## flask image server variables
 export FLASK_APP=imageserver.py

@@ -5,3 +5,4 @@ google-cloud-datastore>=1.9.0
 google-cloud-storage>=1.19.0
 google-cloud-logging>=1.12.1
 flask-cors>=3.0.8
+python-datauri>=0.2.8

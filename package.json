@@ -19,6 +19,7 @@
   "homepage": "https://github.com/1907cloudgcp/RevAntarctica#readme",
   "dependencies": {
     "bootstrap": "^4.3.1",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "jquery": "^3.4.1",
     "popper": "^1.0.1",

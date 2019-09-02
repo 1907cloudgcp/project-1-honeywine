@@ -2,10 +2,7 @@
 
 // cloud function and local image server
 let cloud_function = "https://us-central1-revgcp-project1-trial.cloudfunctions.net/data_broker";
-// let image_server = "http://localhost:5000/imageserve";
-let image_server = cloud_function;
-// let storepref = "img/";
-let storepref = "https://storage.cloud.google.com/antarcticbucketfish66/web-content/img/";
+let image_server = "http://localhost:5000";
 
 // image list
 let image_list = [];
@@ -41,9 +38,9 @@ function addDatum(img_src, imw, imh) {
     
     let a = document.createElement('a');
     a.target = "_blank";
-    a.href = storepref + img_src;
+    a.href = "img/" + img_src;
     let imge = document.createElement("img");
-    imge.src = storepref + img_src;
+    imge.src = "img/" + img_src;
     imge.className = "rounded mx-auto d-block";
     imge.style = "width:35%; height:35%;";
     a.appendChild(imge);
@@ -65,14 +62,10 @@ function deleteTableRow(elmnt) {
     p.parentNode.removeChild(p);
     img_name = p.firstChild.innerText;
     // alert(img_name);
-
-    // remove from carousel and image list
     removefromcarousel(img_name);
-    index = searchimglist(img_name);
-    if (index > -1) image_list.splice(index,1);
 
-    // call DELETE on imageserver...
     let newObj = { 'name': img_name, };
+    // call DELETE on imageserver...
     fetch(image_server, {
         method: 'DELETE',
         headers: {
@@ -81,15 +74,15 @@ function deleteTableRow(elmnt) {
         },
         body: JSON.stringify(newObj),
     });
-    // // call DELETE on google DataStore...
-    // fetch(cloud_function, {
-    //     method: 'DELETE',
-    //     headers: {
-    //         'Accept': 'application/json',
-    //         'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(newObj),
-    // });
+    // call DELETE on google DataStore...
+    fetch(cloud_function, {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newObj),
+    });
 }
 
 
@@ -202,8 +195,7 @@ function drawImage() {
 //===== image uploading =====//
 function upload() {
     if (current_file == null) return false;
-    if (searchimglist(current_file) < 0) {
-        document.body.classList.add('busy-cursor');
+    if (!searchimglist()) {
         // upload to server "/img"...
         let newObj1 = {
             'filename': current_file,
@@ -219,28 +211,29 @@ function upload() {
         }).then( (response) => {
             // add to carousel...
             addtocarousel(current_file, img.width, img.height);
-            // add to DataStore...
-            let newObj2 = {
-                'name': current_file,
-                'width': img.width,
-                'height': img.height,
-            };
-            fetch(cloud_function, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(newObj2),
-            }).then( (response) => {
-                // add to metadata table...
-                addDatum(current_file, img.width, img.height);
-                // add to image_list...
-                image_list.push(newObj2);
-                document.body.classList.remove('busy-cursor');
-                alert("Finished Uploading.")
-            });
         });
+
+        // add to DataStore...
+        let newObj2 = {
+            'name': current_file,
+            'width': img.width,
+            'height': img.height,
+        };
+        fetch(cloud_function, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newObj2),
+        }).then( (response) => {
+            // add to metadata table...
+            addDatum(current_file, img.width, img.height);
+        });
+
+        // add to image_list...
+        image_list.push(newObj2);
+        alert("Finished Uploading.")
     } else {
         alert("Image name is already in use.");
     }
@@ -252,7 +245,7 @@ function addtocarousel(img_src, imw, imh) {
     newdiv.id = "carousel-" + img_src;
     newdiv.className = "carousel-item";
     let newimg = document.createElement('img');
-    newimg.src = storepref + img_src;
+    newimg.src = "img/" + img_src;
     newimg.className = "rounded mx-auto d-block";
     newimg.alt = "";
     if (imw > 1000 || imh > 500) {
@@ -276,12 +269,12 @@ function removefromcarousel(img_src) {
     }
 }
 
-function searchimglist(img_name) {
+function searchimglist() {
     for (i=0; i < image_list.length; i++) {
-        if ( image_list[i]['name'] == img_name )
-            return i;
+        if ( image_list[i]['name'] == current_file )
+            return true;
     }
-    return -1;
+    return false;
 }
 
 
