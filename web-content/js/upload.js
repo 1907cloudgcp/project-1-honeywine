@@ -108,6 +108,7 @@ let ls = window.sessionStorage,
     color = ls.getItem('color') || "black", 
     neww = 0, newh = 0,
     phsubmit = document.getElementById('photosubmit');
+    phbutton = document.getElementById('photobutton');
 
 // if (color) {
 //     Array.prototype.forEach.call(colors, function(el) {
@@ -203,6 +204,7 @@ function drawImage() {
 function upload() {
     if (current_file == null) return false;
     if (searchimglist(current_file) < 0) {
+        phbutton.style.cursor="wait";
         document.body.classList.add('busy-cursor');
         // upload to server "/img"...
         let newObj1 = {
@@ -238,6 +240,7 @@ function upload() {
                 // add to image_list...
                 image_list.push(newObj2);
                 document.body.classList.remove('busy-cursor');
+                phbutton.style.cursor="default";
                 alert("Finished Uploading.")
             });
         });
@@ -255,8 +258,8 @@ function addtocarousel(img_src, imw, imh) {
     newimg.src = storepref + img_src;
     newimg.className = "rounded mx-auto d-block";
     newimg.alt = "";
-    if (imw > 1000 || imh > 500) {
-        asprat = imh > imw ? (500./imh) : (800./imw);
+    if (imw > 800 || imh > 500) {
+        let asprat = Math.min((500./imh),(800./imw));
         newimg.width = Math.round(imw*asprat);
         newimg.height = Math.round(imh*asprat);
     }
@@ -266,14 +269,17 @@ function addtocarousel(img_src, imw, imh) {
 }
 
 function removefromcarousel(img_src) {
-    let target = document.getElementById("carousel-"+img_src);
-    if (target.className = "carousel-item active" && target.nextSibling != null) {
-        target.nextSibling.className = "carousel-item active";
-        target.parentNode.removeChild(target);
-    } else if (target.className = "carousel-item active" && target.previousSibling != null) {
-        target.previousSibling.className = "carousel-item active";
-        target.parentNode.removeChild(target);
+    // alert("carousel-" + img_src);
+    let target = document.getElementById("carousel-" + img_src);
+    if ( target.className == "carousel-item active" 
+        || target.className == "carousel-item active carousel-item-left"
+        || target.className == "carousel-item carousel-item-next carousel-item-left" ) {
+        if (target.previousSibling != null) {
+            target.previousSibling.className = "carousel-item active";
+            if (target.nextSibling != null) target.nextSibling.className = "carousel-item";
+        } 
     }
+    target.parentNode.removeChild(target);
 }
 
 function searchimglist(img_name) {
