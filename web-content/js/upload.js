@@ -60,16 +60,11 @@ function addDatum(img_src, imw, imh) {
 }
 
 function deleteTableRow(elmnt) {
-    // remove from table and carousel...
+    elmnt.style.cursor = "wait";
+    document.body.classList.add('busy-cursor');
     let p = elmnt.parentNode.parentNode;
-    p.parentNode.removeChild(p);
     img_name = p.firstChild.innerText;
     // alert(img_name);
-
-    // remove from carousel and image list
-    removefromcarousel(img_name);
-    index = searchimglist(img_name);
-    if (index > -1) image_list.splice(index,1);
 
     // call DELETE on imageserver...
     let newObj = { 'name': img_name, };
@@ -80,6 +75,16 @@ function deleteTableRow(elmnt) {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(newObj),
+    }).then( (response) => {
+        // remove from carousel, table, and image list
+        removefromcarousel(img_name);
+        elmnt.style.cursor="default";
+        p.parentNode.removeChild(p);
+        index = searchimglist(img_name);
+        if (index > -1) image_list.splice(index,1);
+        
+        document.body.classList.remove('busy-cursor');
+        // alert("Image Removed.")
     });
     // // call DELETE on google DataStore...
     // fetch(cloud_function, {
@@ -102,7 +107,7 @@ let ls = window.sessionStorage,
     // colors = document.getElementsByName('color'),
     context = canvas.getContext('2d'),
     fileReader = new FileReader(), current_file = null,
-    img = new Image(), lastImgData = ls.getItem('image'), 
+    img = new Image(), // lastImgData = ls.getItem('image'), 
     x, y, 
     currentText = ls.getItem('text') || "",
     color = ls.getItem('color') || "black", 
@@ -122,9 +127,9 @@ let ls = window.sessionStorage,
 //     caption.value = currentText;   
 // }
 
-if (lastImgData) {
-    img.src = lastImgData;   
-}
+// if (lastImgData) {
+//     img.src = lastImgData;   
+// }
 
 fileReader.onload = function (e) {
     console.log(typeof e.target.result, e.target.result instanceof Blob);
@@ -155,6 +160,8 @@ img.onload = function() {
 photo.addEventListener('change', function() {
     let file = this.files[0];
     current_file = file.name;
+    if (!current_file) phbutton.disabled = true;
+    else phbutton.disabled = false;
     return file && fileReader.readAsDataURL(file); 
 }); 
 
@@ -200,7 +207,90 @@ function drawImage() {
 }
 
 
+//===== linked-list =====//
+// node class 
+class Node { 
+    constructor(element) 
+    { 
+        this.item = element; 
+        this.next = null;
+        this.prev = null;
+    } 
+} 
+
+// linkedlist class 
+class CarouselLinkedList { 
+    constructor() 
+    { 
+        this.first = null;
+        this.last = null;
+    } 
+
+    add(node) {
+        if (!this.first) {
+            this.first = node;
+            this.last = node;
+        } else {
+            this.last.next = node;
+            this.first.prev = node;
+        }
+        node.prev = this.last;
+        node.next = this.first; 
+        this.last = node;
+        // alert("add");
+    } 
+
+    get(element) {
+        let node = this.first;
+        while (node) {
+            if (element.id == node.item.id) {
+                // alert("get");
+                return node;
+            }
+            node = node.next;
+        }
+        // alert("get null");
+        return null;
+    }
+
+    remove(element) {
+        node = this.get(element);
+        if (node) {
+            node.prev.next = node.next;
+            node.next.prev = node.prev;
+            if (node == this.first) this.first = node.next;
+            if (node == this.last) this.last = node.prev;
+        }
+        // alert("remove");
+    }
+
+    removeNode(node) {
+        if (node) {
+            // alert(node.prev);
+            node.prev.next = node.next;
+            // alert(node.next);
+            node.next.prev = node.prev;
+            if (node == this.first) this.first = node.next;
+            if (node == this.last) this.last = node.prev;
+        }
+    }
+} 
+
+
 //===== image uploading =====//
+// carousel variables
+let carouselrounds = document.getElementById('carouselrounds');
+let carx1 = document.getElementById('carousel-x1'),
+    carx2 = document.getElementById('carousel-x2'),
+    carx3 = document.getElementById('carousel-x3');
+let carousel_list = new CarouselLinkedList();
+let nodex1 = new Node(carx1),
+    nodex2 = new Node(carx2),
+    nodex3 = new Node(carx3);
+carousel_list.add(nodex1);
+carousel_list.add(nodex2);
+carousel_list.add(nodex3);
+
 function upload() {
     if (current_file == null) return false;
     if (searchimglist(current_file) < 0) {
@@ -264,21 +354,30 @@ function addtocarousel(img_src, imw, imh) {
         newimg.height = Math.round(imh*asprat);
     }
     newdiv.appendChild(newimg);
-    let carouseldiv = document.getElementById('carouselrounds');
-    carouseldiv.appendChild(newdiv);
+    carnode = new Node(newdiv);
+    carousel_list.add(carnode);
+    carouselrounds.appendChild(newdiv);
 }
 
 function removefromcarousel(img_src) {
-    // alert("carousel-" + img_src);
     let target = document.getElementById("carousel-" + img_src);
-    if ( target.className == "carousel-item active" 
-        || target.className == "carousel-item active carousel-item-left"
-        || target.className == "carousel-item carousel-item-next carousel-item-left" ) {
-        if (target.previousSibling != null) {
-            target.previousSibling.className = "carousel-item active";
-            if (target.nextSibling != null) target.nextSibling.className = "carousel-item";
-        } 
+    let targetnode = carousel_list.get(target);
+    // alert("carousel-" + img_src);
+    // alert(targetnode.item.id);
+    // alert(targetnode.prev.item.id);
+    // alert(targetnode.next.item.id);
+    if (target.className == "carousel-item active") {
+        // alert("first faultline");
+        targetnode.next.item.className = "carousel-item active";
+        targetnode.next.next.item.className = "carousel-item";
+    } else if (target.className == "carousel-item active carousel-item-left") {
+        // alert("second faultline"); 
+    } else if (target.className == "carousel-item carousel-item-next carousel-item-left") {
+        // alert("third faultline");
+        targetnode.prev.item.className = "carousel-item active";
+        targetnode.next.item.className = "carousel-item";
     }
+    carousel_list.removeNode(targetnode);
     target.parentNode.removeChild(target);
 }
 
